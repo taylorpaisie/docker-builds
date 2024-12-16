@@ -47,7 +47,8 @@ RUN wget https://github.com/chklovski/CheckM2/archive/refs/tags/${CHECKM2_VER}.t
     cd CheckM2-${CHECKM2_VER} && \
     python3 setup.py install && \
     cd .. && \
-    rm -rf ${CHECKM2_VER}.tar.gz
+    rm -rf ${CHECKM2_VER}.tar.gz CheckM2-${CHECKM2_VER}
+
 
 # Install Diamond
 RUN wget http://github.com/bbuchfink/diamond/archive/v${DIAMOND_VER}.tar.gz && \
@@ -57,7 +58,7 @@ RUN wget http://github.com/bbuchfink/diamond/archive/v${DIAMOND_VER}.tar.gz && \
     cmake .. && \
     make -j4 && \
     make install && \
-    rm -rf v${DIAMOND_VER}.tar.gz
+    rm -rf v${DIAMOND_VER}.tar.gz diamond-${DIAMOND_VER}
 
 # Application stage
 FROM ubuntu:focal AS app
