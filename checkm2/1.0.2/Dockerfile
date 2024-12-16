@@ -43,13 +43,6 @@ RUN pip install --no-cache-dir \
     tensorflow==2.2.0
 
 
-# Clone CheckM2 repository and install
-# RUN git config --global http.postBuffer 524288000 && \
-#     git clone https://github.com/chklovski/checkm2.git &&\
-#     cd checkm2 &&\
-#     python3 setup.py install &&\
-#     cd ..
-
 RUN wget https://github.com/chklovski/CheckM2/archive/refs/tags/${CHECKM2_VER}.tar.gz && \
     tar xzf ${CHECKM2_VER}.tar.gz && \
     cd CheckM2-${CHECKM2_VER} && \
@@ -101,6 +94,11 @@ RUN apt-get update && apt-get install -y \
 
 RUN mkdir ../tests/
 COPY tests/ ../tests/
+
+RUN wget -nv --no-check-certificate \
+    https://raw.githubusercontent.com/taylorpaisie/docker_containers/main/checkm2/1.0.2/burk_wgs.fa -O burk_wgs_pos_ctrl.fa && \
+    wget -nv --no-check-certificate \
+    https://raw.githubusercontent.com/taylorpaisie/docker_containers/main/checkm2/1.0.2/burk_16S.fa -O burk_16S_neg_ctrl.fa
 
 RUN python3 -m unittest discover -v -s ../tests
 
