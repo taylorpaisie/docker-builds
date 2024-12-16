@@ -1,8 +1,8 @@
-# set global variables
+# Set global variables
 ARG CHECKM2_VER="1.0.2"
 ARG DIAMOND_VER="2.0.4"
 
-# build Dockerfile
+# Builder stage
 FROM ubuntu:focal AS builder
 ARG CHECKM2_VER
 ARG DIAMOND_VER
@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     less \
     automake \
     cmake \
-    zlib1g-dev\
+    zlib1g-dev \
     libzstd-dev \
     g++ \
     python3 \
@@ -24,10 +24,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     hmmer \
     prodigal \
-    build-essential &&\
+    build-essential && \
     apt-get autoclean && rm -rf /var/lib/apt/lists/*
 
-# install checkm2 and its dependencies
+# Install CheckM2 and its dependencies
 RUN pip install --no-cache-dir \
     numpy==1.19.5 \
     scipy==1.8.0 \
@@ -42,12 +42,12 @@ RUN pip install --no-cache-dir \
     protobuf==3.20.0 \
     tensorflow==2.2.0
 
-
 RUN wget https://github.com/chklovski/CheckM2/archive/refs/tags/${CHECKM2_VER}.tar.gz && \
     tar xzf ${CHECKM2_VER}.tar.gz && \
     cd CheckM2-${CHECKM2_VER} && \
     python3 setup.py install && \
-    cd ..
+    cd .. && \
+    rm -rf ${CHECKM2_VER}.tar.gz
 
 # Install Diamond
 RUN wget http://github.com/bbuchfink/diamond/archive/v${DIAMOND_VER}.tar.gz && \
@@ -56,9 +56,10 @@ RUN wget http://github.com/bbuchfink/diamond/archive/v${DIAMOND_VER}.tar.gz && \
     mkdir bin && cd bin && \
     cmake .. && \
     make -j4 && \
-    make install
+    make install && \
+    rm -rf v${DIAMOND_VER}.tar.gz
 
-# Running the dockerfile and tests
+# Application stage
 FROM ubuntu:focal AS app
 ARG CHECKM2_VER
 ARG DIAMOND_VER
@@ -75,17 +76,11 @@ LABEL maintainer.email='ltj8@cdc.gov'
 
 COPY --from=builder /usr/ /usr/
 
-# Setting working directory
+# Set working directory
 RUN mkdir data/
 WORKDIR /data
 
-# download database and set db in PATH
-RUN checkm2 database --download
-
-# # run test with internal test data
-RUN checkm2 testrun
-
-# ## Test ##
+# Test stage (optional and does not persist)
 FROM app AS test
 
 RUN apt-get update && apt-get install -y \
@@ -95,6 +90,12 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir ../tests/
 COPY tests/ ../tests/
 
+# Download database and set db in PATH
+RUN checkm2 database --download
+
+# Run internal tests
+RUN checkm2 testrun
+
 RUN wget -nv --no-check-certificate \
     https://raw.githubusercontent.com/taylorpaisie/docker_containers/main/checkm2/1.0.2/burk_wgs.fa -O burk_wgs_pos_ctrl.fa && \
     wget -nv --no-check-certificate \
@@ -102,3 +103,5 @@ RUN wget -nv --no-check-certificate \
 
 RUN python3 -m unittest discover -v -s ../tests
 
+# Final image
+FROM app
