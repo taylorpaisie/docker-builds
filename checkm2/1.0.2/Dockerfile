@@ -3,7 +3,7 @@ ARG CHECKM2_VER="1.0.2"
 ARG DIAMOND_VER="2.0.4"
 
 # Builder stage
-FROM ubuntu:focal AS builder
+FROM ubuntu:jammy AS builder
 ARG CHECKM2_VER
 ARG DIAMOND_VER
 
@@ -61,11 +61,11 @@ RUN wget http://github.com/bbuchfink/diamond/archive/v${DIAMOND_VER}.tar.gz && \
     rm -rf v${DIAMOND_VER}.tar.gz diamond-${DIAMOND_VER}
 
 # Application stage
-FROM ubuntu:focal AS app
+FROM ubuntu:jammy AS app
 ARG CHECKM2_VER
 ARG DIAMOND_VER
 
-LABEL base.image="ubuntu:focal"
+LABEL base.image="ubuntu:jammy"
 LABEL dockerfile.version="1"
 LABEL software="CheckM2"
 LABEL software.version=${CHECKM2_VER}
